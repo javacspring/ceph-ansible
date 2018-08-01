@@ -1,3 +1,11 @@
 LVS output:
 -----------
 {{ lvs_out.stdout }}
+
+Sample output for osds.yml:
+----------------------------
+{% for bucket_index in data_lvs %}
+- data: {{ bucket_index.name }}
+  data_vg: {{ vg_name }}
+  journal: {{ bucket_index.journal_name }}
+{% endfor %}

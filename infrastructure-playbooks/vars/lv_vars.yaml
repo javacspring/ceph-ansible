@@ -1,12 +1,24 @@
+# Path of device primed for LV creation.
 device: /dev/sdc
 
-# to use the teardown playbook include "ceph" in the name of the vg 
-vg_name: ceph-vg
+# Since this playbook can be run multiple times across different devices, device_basename is to differenciate the names of journals or data lvs if the names are not changed
+device_basename: "{{ device.split('/')[-1] }}"
 
-# user must ensure all the percentages for the lvs are less than or equal to 100
-# to use the teardown playbook include "ceph" in the name of the lv
+# Only one VG is created in the playbook for all the LVs. This VG takes up the entire device specified in "device".
+vg_name: "ceph-vg-{{ device_basename }}"
+
+# Every entry in lvs is the information for a data LV and a journal LV to go along with it. For this play book LV's for just journals or just data cannot be created.
+# The LVs for journals are created first then the LV for data. 
+#
+# Per the lvol module documentation, the "size" and "journal_size" is the size of the logical volume, according to lvcreate(8) --size. 
+# This is by default in megabytes or optionally with one of [bBsSkKmMgGtTpPeE] units; or according to lvcreate(8) --extents as a percentage of [VG|PVS|FREE]; Float values must begin with a digit.
+# For further reading and examples see: https://docs.ansible.com/ansible/2.6/modules/lvol_module.html
 lvs:
-  - name: ceph-journal
-    percentage: 20
-  - name: ceph-BI
-    percentage: 80
+  - data_lv_name: "ceph-bucket-index-{{ device_basename }}-1"
+    data_lv_size: 5850
+    journal_name: "ceph-journal-{{ device_basename }}-1"
+    journal_size: 5850
+  - data_lv_name: "ceph-bucket-index-{{ device_basename }}-2"
+    data_lv_size: 80%FREE
+    journal_name: "ceph-journal-{{ device_basename }}-2"
+    journal_size: 5850
