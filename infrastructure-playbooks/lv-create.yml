@@ -1,0 +1,51 @@
+- name: Creates Logical volumes for the Bucket Index or FS Journals on a single device. Prepares for use of osd_scenario=lvm. 
+  hosts:
+  - osds
+
+  tasks:
+
+  - name: Include vars of lv_vars.yaml
+    include_vars:
+      file: lv_vars.yaml
+
+  # task here that makes sure that all the percentages are less than or equal to 100
+
+  # need to check if lvm2 is installed
+  - name: install lvm2
+    package:
+      name: lvm2
+      state: present
+
+  # Make entire device a VG
+  - name: add device as LVM PV
+    lvg:
+      force: yes
+      pvs: "{{device}}"
+      pesize: 4
+      state: present
+      vg: "{{vg_name}}"
+
+  # Create LVs 
+  - name: create Ceph LVs for device
+    lvol:
+      lv: "{{item.name}}"
+      vg: "{{vg_name}}"
+      size: "{{item.percentage}}%PVS"
+      pvs: "{{device}}"
+    with_items:
+      - "{{ lvs }}"
+
+  # Write ending configuration logfile
+  - name: save LV configuration
+    shell: lvs -o -origin,convert_lv,pool_lv,move_pv,mirror_log,data_lv,lv_metadata_size,data_percent,metadata_percent,copy_percent,lv_attr
+    run_once: true
+    register: lvs_out
+
+  - name: write cmd output to logfile
+    action: template src=templates/logfile.j2 dest=/tmp/logfile.txt
+    delegate_to: localhost
+
+  - name: Print closing message
+    debug:
+      msg: "Wrote LVS cmd output to /tmp/logfile.txt"
+    delegate_to: localhost

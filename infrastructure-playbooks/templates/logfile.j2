@@ -1,11 +1,3 @@
-BucketIndex Partition Size:
----------------------------
-{{ nvme_bucket_index_size | to_yaml }}
-
-LSBLK output:
--------------
-{{ lsblk_out.stdout_lines | to_yaml }}
-
 LVS output:
 -----------
-{{ lvs_out.stdout_lines | to_yaml }}
+{{ lvs_out.stdout }}

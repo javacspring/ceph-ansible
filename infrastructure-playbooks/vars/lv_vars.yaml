@@ -1,0 +1,12 @@
+device: /dev/sdc
+
+# to use the teardown playbook include "ceph" in the name of the vg 
+vg_name: ceph-vg
+
+# user must ensure all the percentages for the lvs are less than or equal to 100
+# to use the teardown playbook include "ceph" in the name of the lv
+lvs:
+  - name: ceph-journal
+    percentage: 20
+  - name: ceph-BI
+    percentage: 80
